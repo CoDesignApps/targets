@@ -35,6 +35,7 @@ void main() async {
   'ui/icon-credits.png',
   'ui/icon-help.png',
   'ui/start-button.png',
+  'faces/adis.png',
  ]);
 
 

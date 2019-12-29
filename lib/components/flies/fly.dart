@@ -53,6 +53,7 @@ class Fly {
 
       double stepDistance = speed * t;
       Offset toTarget = targetLocation - Offset(flyRect.left, flyRect.top);
+
       if(stepDistance < toTarget.distance) {
         Offset stepToTarget = Offset.fromDirection(toTarget.direction, stepDistance);
         flyRect = flyRect.shift(stepToTarget);

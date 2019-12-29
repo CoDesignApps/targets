@@ -12,7 +12,8 @@ import 'package:targets/components/flies/drooler-fly.dart';
 import 'package:targets/components/flies/hunger-fly.dart';
 import 'package:targets/components/flies/macho-fly.dart';
 import 'package:targets/components/backyard.dart';
-import 'package:targets/components/targets/targetParticles.dart';
+import 'package:targets/components/targets/target-particle.dart';
+import 'package:targets/components/targets/face-particle.dart';
 
 import 'package:targets/views/view.dart';
 import 'package:targets/views/home-view.dart';
@@ -22,9 +23,11 @@ import 'package:targets/views/credits-view.dart';
 import 'package:targets/components/buttons/start-button.dart';
 import 'package:targets/components/buttons/credits-button.dart';
 import 'package:targets/components/buttons/help-button.dart';
-import 'package:targets/controllers/spawner.dart';
-
+import 'package:targets/controllers/fly-spawner.dart';
+import 'controllers/target-spawner.dart';
 import 'package:flame/components/particle_component.dart';
+
+
 
 
 class TargetGameLoop extends BaseGame {
@@ -33,9 +36,9 @@ class TargetGameLoop extends BaseGame {
   double tileSize;
   bool isInitialized = false;
   List<Fly> flies = [];
+  List<TargetParticle> targets = [];
   Random rnd;
   Backyard background;
-  TargetParticles tParticle;
   View activeView = View.home;
   HomeView homeView;
   LostView lostView;
@@ -45,6 +48,11 @@ class TargetGameLoop extends BaseGame {
   HelpButton helpButton;
   CreditsButton creditsButton;
   FlySpawner flySpawner;
+  TargetSpawner targetSpawner;
+
+void spawnTarget(){
+  targets.add(TargetParticle(this));
+}
 
 
     void spawnFly() {
@@ -73,10 +81,8 @@ class TargetGameLoop extends BaseGame {
   void render(Canvas canvas) {
     if (!isInitialized) {
       tileSize = size.width / 9;
-      rnd = Random();
-      //spawnFly();      
+      rnd = Random();    
       background = Backyard(this);  
-       tParticle = TargetParticles(this);
       isInitialized = true;  
       homeView = HomeView(this);
       lostView = LostView(this);
@@ -86,12 +92,15 @@ class TargetGameLoop extends BaseGame {
       startButton = StartButton(this);   
       helpButton = HelpButton(this);
       creditsButton = CreditsButton(this);  
-      flySpawner = FlySpawner(this);
+      //flySpawner = FlySpawner(this);
+      targetSpawner = TargetSpawner(this);
+
     } // initialisation done
 
     background.render(canvas);
    
-    flies.forEach((Fly fly) => fly.render(canvas));
+    //flies.forEach((Fly fly) => fly.render(canvas));
+    targets.forEach((TargetParticle tp) => tp.render(canvas));
     
     if (activeView == View.home) {
       homeView.render(canvas);
@@ -114,20 +123,26 @@ class TargetGameLoop extends BaseGame {
       creditsView.render(canvas);
     }
     
-     tParticle.render(canvas);
+
   }
 
 
   void update(double t) {
-    flies.forEach((Fly fly) => fly.update(t));
-    flies.removeWhere((Fly fly) => fly.isOffScreen);
-    flySpawner.update(t);
+  //flies.forEach((Fly fly) => fly.update(t));
+  //flies.removeWhere((Fly fly) => fly.isOffScreen);
+  //flySpawner.update(t);
+    targets.forEach((TargetParticle tp ) => tp.update(t));
+    targets.removeWhere((TargetParticle tp ) => tp.isOffScreen);
+    
+    targetSpawner.update(t);
+
   }
 
   void onTapDown(TapDownDetails d) {
     
    bool isTapDownHandled = false;
    bool didHitFly = false;
+   bool didHitTarget = false;
 
    // start button
    if(!isTapDownHandled && startButton.rect.contains(d.globalPosition)) {
@@ -142,24 +157,48 @@ class TargetGameLoop extends BaseGame {
     // activeView == View.playing is not part of tutorial
     // in tutorial one can hit flies before starting game, but makes not sense, 
     // so I made it to not be able to hit flies until the game is started
+    /*
     if(!isTapDownHandled &&  (activeView == View.playing)) {
       flies.forEach((Fly fly) {
         if (fly.flyRect.contains(d.globalPosition)) {
           fly.onTapDown();
           isTapDownHandled = true;
           didHitFly = true; 
-          print('didHitFly - ' + didHitFly.toString());
+          print('didHitFly -  $didHitFly');
+        }
+      });
+      
+    }
+    */
+
+      if(!isTapDownHandled &&  (activeView == View.playing)) {
+      targets.forEach((TargetParticle tp) {
+        if (tp.targetRect.contains(d.globalPosition)) {
+          tp.onTapDown();
+          isTapDownHandled = true;
+          didHitTarget = true; 
+          print('didHitFly - $didHitTarget');
         }
       });
       
     }
 
+    // exclude code so can't loose
+    /*
      if(!isTapDownHandled && activeView == View.playing && gameStarted && !didHitFly) {
       activeView = View.lost;
       print('didHitFly - '  + didHitFly.toString());
       gameStarted = false;
       isTapDownHandled = true;
     }
+    */
+
+  if(!isTapDownHandled && activeView == View.playing && gameStarted && !didHitTarget) {
+        activeView = View.lost;
+        print('didHitTarget - $didHitTarget');
+        gameStarted = false;
+        isTapDownHandled = true;
+      }
 
     // help button
 if (!isTapDownHandled && helpButton.rect.contains(d.globalPosition)) {
@@ -184,17 +223,6 @@ if (!isTapDownHandled) {
     isTapDownHandled = true;
   }
 }
-
-/*
-    if(activeView == View.lost){
-       print('View - lost');
-    } else if (activeView == View.playing) {
-       print('View - playing');
-    } else if (activeView == View.home) {
-       print('View - home');
-    }
-*/
-
 
   
   }

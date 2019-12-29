@@ -13,6 +13,7 @@ class AgileFly extends Fly {
     flyingSprite.add(Sprite('flies/agile-fly-1.png'));
     flyingSprite.add(Sprite('flies/agile-fly-2.png'));
     deadSprite = Sprite('flies/agile-fly-dead.png');
+    
   }
 
 
